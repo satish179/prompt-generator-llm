@@ -38,13 +38,19 @@ function PromptGenerator({ darkMode }) {
     if (file) formData.append('file', file);
 
     try {
-      const response = await axios.post('/api/generate', formData, {
+      console.log('Sending request to http://localhost:5000/api/generate with:', { idea, type, fileName });
+      const response = await axios.post('http://localhost:5000/api/generate', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
+      console.log('Response received:', response.data);
 
       let prompt = response.data.prompt;
+      if (!prompt) {
+        console.error('No prompt in response:', response.data);
+        throw new Error('No prompt data received');
+      }
       // Remove any unintended stars and format with bold subheadings
       prompt = prompt.replace(/\*/g, ''); // Remove all stars
       const formattedPrompt = prompt
@@ -60,7 +66,7 @@ function PromptGenerator({ darkMode }) {
       setFile(null);
       setFileName('');
     } catch (error) {
-      console.error('Error generating prompt:', error);
+      console.error('Error generating prompt:', error.response ? error.response.data : error.message);
       setMessages([...newMessages, { sender: 'bot', text: '❌ Failed to generate prompt.' }]);
     } finally {
       setLoading(false);
